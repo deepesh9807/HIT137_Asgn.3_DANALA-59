@@ -1,14 +1,14 @@
-# models/text_to_video.py
+# app_model/text_to_video.py
 import os, re, datetime, numpy as np, torch
 from PIL import Image
 import imageio.v3 as iio
 
-from models.base import BaseModelAdapter
+from app_model.base import BaseModelAdapter
 from diffusers import (
-    StableDiffusionXLPipeline,         # GPU/MPS text->image (HQ)
-    StableVideoDiffusionPipeline,      # GPU/MPS img2vid
-    StableDiffusionPipeline,           # CPU fallback text->image
-    DPMSolverMultistepScheduler,
+    StableDiffusionXLPipeline,  
+    StableVideoDiffusionPipeline,  
+    StableDiffusionPipeline,       
+    DPMSolverMultistepScheduler,  
 )
 
 def _safe(s, n=64):
@@ -30,7 +30,7 @@ class TextToVideoAdapter(BaseModelAdapter):
         os.makedirs("assets", exist_ok=True)
 
         if self._device in ("cuda", "mps"):
-            # --- SDXL for high-quality still ---
+            #***** Stable Diffusion XL (text2image) *****#
             self._t2i = StableDiffusionXLPipeline.from_pretrained(
                 "stabilityai/stable-diffusion-xl-base-1.0",
                 torch_dtype=self._dtype,
@@ -43,7 +43,7 @@ class TextToVideoAdapter(BaseModelAdapter):
             self._t2i.to(self._device)
             self._t2i.set_progress_bar_config(disable=True)
 
-            # --- Stable Video Diffusion (img2vid) ---
+            #***** Stable Video Diffusion (img2vid) *****#
             self._img2vid = StableVideoDiffusionPipeline.from_pretrained(
                 "stabilityai/stable-video-diffusion-img2vid",
                 torch_dtype=self._dtype,
@@ -55,7 +55,7 @@ class TextToVideoAdapter(BaseModelAdapter):
             self._pipe = self._t2i
 
         else:
-            # --- CPU fallback: SD 1.5 still (HQ-ish), then Ken Burns ---
+
             self._t2i_cpu = StableDiffusionPipeline.from_pretrained(
                 "runwayml/stable-diffusion-v1-5",
                 torch_dtype=torch.float32,
@@ -70,7 +70,7 @@ class TextToVideoAdapter(BaseModelAdapter):
             self._t2i_cpu.to("cpu")
             self._t2i_cpu.set_progress_bar_config(disable=True)
 
-            self._pipe = self._t2i_cpu  # truthy for GUI check
+            self._pipe = self._t2i_cpu  # Mark as loaded for GUI check
 
     def info(self):
         return {
@@ -81,7 +81,7 @@ class TextToVideoAdapter(BaseModelAdapter):
             "Runtime": f"Device: {self._device}, DType: {str(self._dtype).split('.')[-1]}",
         }
 
-    # --------- Helpers ---------
+    #******* Helpers*******#
     def _generate_sdxl_still(self, prompt: str, steps=40, cfg=6.5, size=1024):
         h = w = (size // 8) * 8
         if self._device == "cuda" and self._dtype == torch.float16:
@@ -92,7 +92,8 @@ class TextToVideoAdapter(BaseModelAdapter):
         return img.convert("RGB")
 
     def _svd_img2vid(self, img: Image.Image, num_frames=25, fps=14, motion_bucket_id=127, cond_aug=0.02):
-        # SVD prefers 16:9 around 576p; resize SDXL still to 1024x576 for sharper motion
+        # Resize input image to 1024x576 (16:9) for best results
+
         vid_w, vid_h = 1024, 576
         base = img.resize((vid_w, vid_h), Image.LANCZOS)
 
@@ -143,9 +144,9 @@ class TextToVideoAdapter(BaseModelAdapter):
             frames.append(frm)
         return frames, fps
 
-    # --------- Main run ---------
+    #******* Main run *******#
     def run(self, payload):
-        # Accept dict or str
+        # Accept either a raw path string or a UI dict
         if isinstance(payload, dict):
             prompt = (payload.get("prompt") or payload.get("text") or "").strip()
         else:
@@ -172,7 +173,7 @@ class TextToVideoAdapter(BaseModelAdapter):
                 "still_path": still_path,
             }
 
-        # CPU fallback
+        
         still = self._cpu_hq_still(prompt, steps=36, cfg=7.0, size=512)
         still_path = os.path.join("assets", f"t2v_still_{safe}_{ts}.png")
         still.save(still_path)

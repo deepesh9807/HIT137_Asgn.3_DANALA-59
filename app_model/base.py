@@ -13,7 +13,7 @@ class BaseModelAdapter:
         raise NotImplementedError
 
     def info(self):
-        # Return a dict so InfoFrame can format it nicely
+        # Return a dict so Infoframe can format it nicely
         return {
             "Model": self.model_name or self.__class__.__name__,
             "Category": self.category or "Unknown",

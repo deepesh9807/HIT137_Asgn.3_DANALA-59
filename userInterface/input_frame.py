@@ -1,4 +1,4 @@
-# ui/input_frame.py
+# userInterface/input_frame.py
 import tkinter as tk
 from tkinter import ttk, filedialog
 from tkinter.scrolledtext import ScrolledText
@@ -6,7 +6,8 @@ from tkinter.scrolledtext import ScrolledText
 class InputFrame(ttk.LabelFrame):
     def __init__(self, master):
         super().__init__(master, text="User Input")
-        # grid weights (responsive)
+       
+        # Layout
         for c in range(3):
             self.columnconfigure(c, weight=1 if c != 2 else 0)
         for r in range(4):

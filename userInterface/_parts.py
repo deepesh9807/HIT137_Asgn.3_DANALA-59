@@ -1,4 +1,4 @@
-# ui/_parts.py
+# userInterface/_parts.py
 import tkinter as tk
 from tkinter import ttk
 
@@ -9,7 +9,7 @@ class ThemedScrolledText(ttk.Frame):
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
 
-        # Text widget (classic tk) — remove bright borders
+        # single vertical bar by default
         tk_kwargs = dict(wrap="word", borderwidth=0, highlightthickness=0)
         tk_kwargs.update(text_kwargs or {})
         self.text = tk.Text(self, **tk_kwargs)
@@ -19,12 +19,14 @@ class ThemedScrolledText(ttk.Frame):
         self.vsb.grid(row=0, column=1, sticky="ns")
         self.text.configure(yscrollcommand=self.vsb.set)
 
-        # optional horizontal bar
-        # self.hsb = ttk.Scrollbar(self, orient="horizontal", command=self.text.xview)
-        # self.hsb.grid(row=1, column=0, sticky="ew")
-        # self.text.configure(xscrollcommand=self.hsb.set)
+    # optional horizontal bar
+    def _add_horizontal_scrollbar(self):
+        self.hsb = ttk.Scrollbar(self, orient="horizontal", command=self.text.xview)
+        self.hsb.grid(row=1, column=0, sticky="ew")
+        self.text.configure(xscrollcommand=self.hsb.set)
+     
 
-    # convenience
+   # Proxy common Text methods
     def insert(self, *a, **k): return self.text.insert(*a, **k)
     def delete(self, *a, **k): return self.text.delete(*a, **k)
     def get(self, *a, **k):    return self.text.get(*a, **k)

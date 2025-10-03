@@ -1,8 +1,8 @@
 # ui/preferences.py
 import tkinter as tk
 from tkinter import ttk, colorchooser
-from utils.config import load_config, save_config
-from utils.theme import apply_theme
+from helpers.config import load_config, save_config
+from helpers.theme import apply_theme
 
 class PreferencesDialog(tk.Toplevel):
     def __init__(self, master):
@@ -12,7 +12,7 @@ class PreferencesDialog(tk.Toplevel):
         self.grab_set()
         self.resizable(False, False)
 
-        # ✅ Theme the dialog itself
+        # Theme the dialog itself
         apply_theme(self)
 
         self.cfg = load_config()
@@ -70,7 +70,7 @@ class PreferencesDialog(tk.Toplevel):
 
     def _on_theme_change(self, _):
         self._toggle_custom(self.var_theme.get() == "Custom")
-        # ✅ live-preview the dialog’s colors when switching theme (without saving)
+        #  live-preview the dialog’s colors when switching theme (without saving)
         #   only apply to this dialog so the main app doesn’t jump until Apply.
         apply_theme(self)
 
@@ -93,7 +93,7 @@ class PreferencesDialog(tk.Toplevel):
             cfg["custom"]["font_size"] = int(self.var_font.get())
         save_config(cfg)
 
-        # ✅ apply to the whole app AND this dialog
+        #  apply to the whole app AND this dialog
         apply_theme(self.master)
         apply_theme(self)
         self.destroy()

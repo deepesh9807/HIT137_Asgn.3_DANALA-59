@@ -1,7 +1,7 @@
-# models/text_to_image.py — HQ CPU preset (Stable Diffusion 1.5)
+# app_model/text_to_image.py
 import os, re, datetime, torch
 from diffusers import StableDiffusionPipeline, DPMSolverMultistepScheduler
-from models.base import BaseModelAdapter
+from app_model.base import BaseModelAdapter
 
 class TextToImageAdapter(BaseModelAdapter):
     model_name  = "runwayml/stable-diffusion-v1-5"
@@ -9,26 +9,26 @@ class TextToImageAdapter(BaseModelAdapter):
     description = "High-quality text-to-image on CPU (SD 1.5, DPM-Solver)."
 
     def load(self):
-        # Force CPU on your laptop; float32 avoids black images on CPU.
+        # Force CPU on your laptop
         self._device = "cpu"
-        # Use torch_dtype (works across diffusers versions; ignore deprecation warning if shown)
+       # CPU uses float32 for good quality
         self._pipe = StableDiffusionPipeline.from_pretrained(
             self.model_name,
             torch_dtype=torch.float32,
             use_safetensors=True,
         )
-        # Better scheduler for quality with fewer steps
+        # Better scheduler for quality on CPU
         try:
             self._pipe.scheduler = DPMSolverMultistepScheduler.from_config(self._pipe.scheduler.config)
         except Exception:
             pass
 
-        # Safety checker → no-op for classroom demo (prevents blank outputs)
+        # Disable the filter of NSFW images
         if hasattr(self._pipe, "safety_checker"):
             def _noop(images, **kwargs): return images, [False] * len(images)
             self._pipe.safety_checker = _noop
 
-        # Light memory tweaks on CPU
+        # Enable memory-efficient attention
         for fn in ("enable_attention_slicing", "enable_vae_slicing"):
             try: getattr(self._pipe, fn)()
             except Exception: pass
@@ -37,7 +37,7 @@ class TextToImageAdapter(BaseModelAdapter):
         self._pipe.to(self._device)
 
     def run(self, payload):
-        # Accept dict from InputFrame OR raw string
+        # Accept either a raw path string or a UI dict
         if isinstance(payload, dict):
             prompt = (payload.get("prompt") or payload.get("text") or "").strip()
         else:

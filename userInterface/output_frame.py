@@ -1,11 +1,11 @@
-# ui/output_frame.py
+# userInterface/output_frame.py
 import os, shutil, platform, subprocess
 from tkinter import ttk, filedialog
 import tkinter as tk
 from PIL import Image, ImageTk
 import imageio.v3 as iio
 
-from ui._parts import ThemedScrolledText
+from userInterface._parts import ThemedScrolledText
 
 class OutputFrame(ttk.LabelFrame):
     def __init__(self, master):

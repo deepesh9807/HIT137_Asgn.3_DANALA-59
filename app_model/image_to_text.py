@@ -1,8 +1,8 @@
 from transformers import BlipProcessor, BlipForConditionalGeneration
 from PIL import Image
 import torch
-from utils.decorators import log_action, timeit
-from models.base import BaseModelAdapter
+from helpers.decorators import log_action, timeit
+from app_model.base import BaseModelAdapter
 
 class ImageToTextAdapter(BaseModelAdapter):
     model_name  = "Salesforce/blip-image-captioning-large"
@@ -19,7 +19,7 @@ class ImageToTextAdapter(BaseModelAdapter):
     @log_action
     @timeit
     def run(self, payload):
-        # Accept either a raw path string or a UI dict
+        # payload may be a raw path string or a UI dict
         if isinstance(payload, dict):
             path = (payload.get("image_path") or payload.get("prompt") or "").strip()
         else:

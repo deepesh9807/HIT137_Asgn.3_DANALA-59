@@ -1,7 +1,7 @@
 from transformers import pipeline
 from PIL import Image
-from utils.decorators import log_action, timeit
-from models.base import BaseModelAdapter
+from helpers.decorators import log_action, timeit
+from app_model.base import BaseModelAdapter
 
 class ImageClassifierAdapter(BaseModelAdapter):
     model_name = "google/vit-base-patch16-224"
@@ -14,7 +14,7 @@ class ImageClassifierAdapter(BaseModelAdapter):
     @log_action
     @timeit
     def run(self, payload):
-        # payload may be a plain path string or a dict from the UI
+        # payload may be a raw path string or a UI dict
         if isinstance(payload, dict):
             path = (payload.get("image_path") or payload.get("prompt") or "").strip()
         else:

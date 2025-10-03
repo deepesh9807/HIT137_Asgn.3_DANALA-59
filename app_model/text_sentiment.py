@@ -1,6 +1,6 @@
 from transformers import pipeline
-from utils.decorators import log_action, timeit
-from models.base import BaseModelAdapter
+from helpers.decorators import log_action, timeit
+from app_model.base import BaseModelAdapter
 
 class TextSentimentAdapter(BaseModelAdapter):
     model_name = "distilbert-base-uncased-finetuned-sst-2-english"
