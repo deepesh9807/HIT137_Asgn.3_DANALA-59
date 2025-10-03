@@ -1,0 +1,7 @@
+transformers
+torch
+pillow
+diffusers
+accelerate
+safetensors
+imageio
