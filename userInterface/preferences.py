@@ -1,4 +1,4 @@
-# ui/preferences.py
+# preferences.py
 import tkinter as tk
 from tkinter import ttk, colorchooser
 from helpers.config import load_config, save_config
@@ -41,13 +41,14 @@ class PreferencesDialog(tk.Toplevel):
         ttk.Button(btns, text="Cancel", command=self.destroy).pack(side="right", padx=6)
         ttk.Button(btns, text="Apply", style="Accent.TButton", command=self._apply).pack(side="right", padx=6)
 
-        # initial state
+        # Initial state
         self._toggle_custom(self.var_theme.get() == "Custom")
 
     def _build_custom_controls(self, parent):
         self.vars = {}
         def row(label, key, col=0, r=0):
-            # ttk labels inherit themed colors; no manual fg/bg needed
+
+            # Created a labeled row with a color entry and picker button
             ttk.Label(parent, text=label).grid(row=r, column=col, sticky="w", pady=2)
             var = tk.StringVar(value=self.cfg["custom"][key])
             ent = ttk.Entry(parent, textvariable=var, width=14)
@@ -70,8 +71,8 @@ class PreferencesDialog(tk.Toplevel):
 
     def _on_theme_change(self, _):
         self._toggle_custom(self.var_theme.get() == "Custom")
-        #  live-preview the dialog’s colors when switching theme (without saving)
-        #   only apply to this dialog so the main app doesn’t jump until Apply.
+        # Apply theme immediately for preview.
+        # apply to dialog only
         apply_theme(self)
 
     def _toggle_custom(self, show: bool):
@@ -93,7 +94,7 @@ class PreferencesDialog(tk.Toplevel):
             cfg["custom"]["font_size"] = int(self.var_font.get())
         save_config(cfg)
 
-        #  apply to the whole app AND this dialog
+        # Re-applying the theme
         apply_theme(self.master)
         apply_theme(self)
         self.destroy()

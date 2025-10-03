@@ -11,15 +11,15 @@ class OutputFrame(ttk.LabelFrame):
     def __init__(self, master):
         super().__init__(master, text="Model Output")
         self.columnconfigure(0, weight=1)
-        # top text area and preview pane should share available vertical space
+        # Make the text area and preview pane share vertical space
         self.rowconfigure(0, weight=1)
         self.rowconfigure(1, weight=1)
 
-        # Top: text area (logs / messages)
+        # Text log area at the top
         self.txt = ThemedScrolledText(self, height=8)
         self.txt.grid(row=0, column=0, sticky="nsew", padx=6, pady=(6,3))
 
-        # Preview panel (image/video thumbnail)
+        # Preview
         pane = ttk.Frame(self)
         pane.grid(row=1, column=0, sticky="nsew", padx=6, pady=(3,6))
         pane.columnconfigure(0, weight=1)
@@ -28,7 +28,7 @@ class OutputFrame(ttk.LabelFrame):
         self.preview = tk.Label(pane, bd=0, highlightthickness=0)
         self.preview.grid(row=0, column=0, sticky="nsew")
 
-        # CTA buttons
+         # Fallback entry for user prompts
         btns = ttk.Frame(pane)
         btns.grid(row=1, column=0, sticky="w", pady=(6,0))
         self.btn_open = ttk.Button(btns, text="Open", command=self._open, state="disabled")
@@ -36,16 +36,17 @@ class OutputFrame(ttk.LabelFrame):
         self.btn_open.pack(side="left", padx=(0,6))
         self.btn_save.pack(side="left")
 
-        # Keep references
+        ## Fallback entry for user prompts
         self._last_image = None
         self._last_path = None
 
-        # Resize preview on frame size change
+        # Refresh preview on resize
         self.preview.bind("<Configure>", lambda e: self._refresh_preview())
 
     def show(self, payload):
         """Accepts str for text, or dict with 'result' string and optional 'image_path'/'video_path'."""
-        # Text log
+       
+        # Clear previous
         self.txt.delete("1.0", "end")
         if isinstance(payload, dict):
             self.txt.insert("1.0", str(payload.get("result", "")))
@@ -64,7 +65,7 @@ class OutputFrame(ttk.LabelFrame):
         self.btn_open.configure(state="disabled")
         self.btn_save.configure(state="disabled")
 
-    # ---------- Preview helpers ----------
+    #******** Preview handling ********#
     def _render_preview(self, path):
         if not path or not os.path.exists(path):
             self.preview.configure(image="", text="")
@@ -77,7 +78,7 @@ class OutputFrame(ttk.LabelFrame):
             if path.lower().endswith((".png", ".jpg", ".jpeg", ".bmp", ".gif")):
                 img = Image.open(path).convert("RGB")
             elif path.lower().endswith((".mp4", ".mov", ".webm", ".avi", ".mkv")):
-                # video: show first frame
+                # load first frame of video
                 frame = iio.imread(path, index=0)
                 img = Image.fromarray(frame)
         except Exception:
@@ -88,16 +89,17 @@ class OutputFrame(ttk.LabelFrame):
             self.btn_open.configure(state="normal")
             self.btn_save.configure(state="normal")
             return
-        # Ensure preview is not too small: upscale to a reasonable minimum while
-        # preserving aspect ratio so thumbnails are visible in the UI.
+        # Fallback entry for user prompts
+        # Resize image to fit max 720x720 but min 220x220
         try:
             min_dim = 220
             max_dim = 720
             w0, h0 = img.size
-            # compute scale to fit within max_dim but at least min_dim
+            # Compute scale factors added
             scale_down = min(max_dim / w0, max_dim / h0, 1.0)
             scale_up = max(min_dim / w0, min_dim / h0, 1.0)
-            # If image is very small, upscale; otherwise cap to max when too large
+           
+            # final size
             if scale_up > 1.0:
                 new_w = int(w0 * scale_up)
                 new_h = int(h0 * scale_up)
@@ -105,7 +107,7 @@ class OutputFrame(ttk.LabelFrame):
                 new_w = int(w0 * scale_down)
                 new_h = int(h0 * scale_down)
 
-            # final clamp
+            # Clamp to min/max sizes
             new_w = max(1, min(new_w, max_dim))
             new_h = max(1, min(new_h, max_dim))
 
@@ -126,7 +128,7 @@ class OutputFrame(ttk.LabelFrame):
         self._last_image = ImageTk.PhotoImage(img)
         self.preview.configure(image=self._last_image)
 
-    # ---------- Actions ----------
+    #******* Open / Save As *******#
     def _open(self):
         if not self._last_path or not os.path.exists(self._last_path): return
         system = platform.system()
@@ -134,7 +136,7 @@ class OutputFrame(ttk.LabelFrame):
             if system == "Darwin":
                 subprocess.Popen(["open", self._last_path])
             elif system == "Windows":
-                os.startfile(self._last_path)  # type: ignore[attr-defined]
+                os.startfile(self._last_path)  # type: ignore
             else:
                 subprocess.Popen(["xdg-open", self._last_path])
         except Exception:

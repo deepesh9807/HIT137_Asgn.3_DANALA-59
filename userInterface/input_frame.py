@@ -14,18 +14,18 @@ class InputFrame(ttk.LabelFrame):
             self.rowconfigure(r, weight=0)
         self.rowconfigure(3, weight=1)  # text area grows
 
-        # mode (text / image)
+        # mode radio buttons added
         self.var_mode = tk.StringVar(value="text")
         ttk.Radiobutton(self, text="Text",  variable=self.var_mode, value="text").grid(row=0, column=0, sticky="w", padx=6, pady=4)
         ttk.Radiobutton(self, text="Image", variable=self.var_mode, value="image").grid(row=0, column=1, sticky="w", padx=6, pady=4)
 
-        # image path + browse
+        # image path entry + browse button added
         self.var_path = tk.StringVar()
         self.ent_path = ttk.Entry(self, textvariable=self.var_path)
         self.ent_path.grid(row=1, column=0, columnspan=2, sticky="ew", padx=6, pady=(0,6))
         ttk.Button(self, text="Browse", command=self._browse).grid(row=1, column=2, sticky="e", padx=(0,6), pady=(0,6))
 
-        # prompt / text input (grows)
+        # multi-line text box for captions/prompts
         self.txt = ScrolledText(self, height=8, wrap="word")
         self.txt.grid(row=3, column=0, columnspan=3, sticky="nsew", padx=6, pady=(0,6))
 
@@ -40,11 +40,12 @@ class InputFrame(ttk.LabelFrame):
             return {
                 "mode": "image",
                 "image_path": self.var_path.get().strip(),
-                "prompt": self.txt.get("1.0", "end").strip(),  # keep text too for img-caption models
+                "prompt": self.txt.get("1.0", "end").strip(),  # optional
             }
 
-        # text mode: prefer the multi-line text box, but fall back to the single-line
-        # entry (users often type short prompts there as in the screenshot).
+        # text mode: use text area, fallback to path
+        # Fallback entry for user prompts
+        
         prompt = self.txt.get("1.0", "end").strip()
         if not prompt:
             prompt = self.ent_path.get().strip()
